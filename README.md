@@ -43,7 +43,11 @@ deploy to databases with pre-populated users.
 
 
 ## Installation
+
 To install this Custom Resource, type:
+
+
+# NOT COMPLETE! #
 
 ```sh
 export VPC_ID=$(aws ec2  --output text --query 'Vpcs[?IsDefault].VpcId' describe-vpcs)
