@@ -26,12 +26,8 @@ deploy:
 		cp \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-$(VERSION).zip \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-latest.zip 
-	aws s3api --region $(AWS_REGION) \
-		put-object-acl --bucket $(S3_BUCKET) \
-		--acl public-read --key lambdas/$(NAME)-$(VERSION).zip 
-	aws s3api --region $(AWS_REGION) \
-		put-object-acl --bucket $(S3_BUCKET) \
-		--acl public-read --key lambdas/$(NAME)-latest.zip 
+
+deploy-all-regions:
 	@for REGION in $(ALL_REGIONS); do \
 		echo "copying to region $$REGION.." ; \
 		aws s3 --region $(AWS_REGION) \
