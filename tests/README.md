@@ -1,0 +1,10 @@
+# test
+Before you can test this code install the [Oracle instant client libraries](http://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html) and
+ start a local Oracle docker container.
+
+
+```
+docker run -d \
+      -p 1521:1521 \
+      wnameless/oracle-xe-11g
+```
