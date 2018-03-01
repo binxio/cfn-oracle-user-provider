@@ -37,9 +37,9 @@ It is quite easy: you specify a CloudFormation resource of the [Custom::OracleUs
 
 After the deployment, the Oracle user 'scott' has been created and granted the CONNECT role. The password for the root database user has been obtained by querying the Parameter `/oracle/oracle/password`.  
 
-The RetainPolicy by default is `Retain`. This means that the connect role is revoked from the user. If you specify drop, it will be dropped and your data will be lost.
-If you specify `Adopt` as True, a create user will not fail if the user already exists. Instead, the password is changed for that user. This is to allow to 
-deploy to databases with pre-populated users.
+The RetainPolicy by default is `Retain`. This means that the account is locked. If you specify drop, the user will be dropped.
+If you specify `Adopt` as True, a create user will not fail if the user already exists. Instead, the password is changed for that user and the account is unlocked. 
+This is to allow to deploy to databases with pre-populated users.
 
 
 ## Installation
