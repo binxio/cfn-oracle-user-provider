@@ -1,5 +1,5 @@
 # Custom::OracleUser
-The `Custom::OracleUser` resource creates an oracle database user without any permissions
+The `Custom::OracleUser` resource creates an oracle database user.
 
 
 ## Syntax
@@ -22,6 +22,9 @@ Properties:
     PasswordParameterName: STRING
   ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:binxio-cfn-oracle-user-provider-vpc-${AppVPC}'
 ```
+
+If the user is created, it is granted the 'Connect' role. When a user is adopted, the password is changed and the account is unlocked: no grants are assigned.  
+When the DeletionPolicy is `Retain` the user is locked instead of dropped.
 
 ## Properties
 You can specify the following properties:

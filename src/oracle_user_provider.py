@@ -176,8 +176,8 @@ class OracleUser(ResourceProvider):
                 log.info('drop user %s', self.user)
                 cursor.execute('DROP USER {}'.format(escaped_string(self.user)))
             else:
-                log.info('revoke connect from %s', self.user)
-                cursor.execute('REVOKE CONNECT FROM {}'.format(escaped_string(self.user)))
+                log.info('lockout user %s', self.user)
+                cursor.execute('ALTER USER {} ACCOUNT LOCK'.format(escaped_string(self.user)))
         finally:
             cursor.close()
 
@@ -185,7 +185,7 @@ class OracleUser(ResourceProvider):
         log.info('update password of %s', self.user)
         cursor = self.connection.cursor()
         try:
-            cursor.execute("ALTER USER {} IDENTIFIED BY {}".format(escaped_string(self.user), escaped_string(self.user_password)))
+            cursor.execute("ALTER USER {} IDENTIFIED BY {} ACCOUNT UNLOCK".format(escaped_string(self.user), escaped_string(self.user_password)))
         finally:
             cursor.close()
 
