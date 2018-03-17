@@ -3,6 +3,7 @@ include Makefile.mk
 NAME=cfn-oracle-user-provider
 
 ORACLE_INSTANT_CLIENT_HOME=/usr/local/lib/instantclient_12_2/
+ORACLE_INSTANCE_CLIENT_ZIP=zips/instantclient-basiclite-linux.x64-12.2.0.1.0.zip
 
 AWS_REGION=eu-central-1
 ALL_REGIONS=$(shell printf "import boto3\nprint '\\\n'.join(map(lambda r: r['RegionName'], boto3.client('ec2').describe_regions()['Regions']))\n" | python | grep -v '^$(AWS_REGION)$$')
@@ -26,25 +27,6 @@ deploy:
 		cp \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-$(VERSION).zip \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-latest.zip 
-
-deploy-all-regions:
-	@for REGION in $(ALL_REGIONS); do \
-		echo "copying to region $$REGION.." ; \
-		aws s3 --region $(AWS_REGION) \
-			cp  \
-			s3://binxio-public-$(AWS_REGION)/lambdas/$(NAME)-$(VERSION).zip \
-			s3://binxio-public-$$REGION/lambdas/$(NAME)-$(VERSION).zip; \
-		aws s3 --region $$REGION \
-			cp  \
-			s3://binxio-public-$$REGION/lambdas/$(NAME)-$(VERSION).zip \
-			s3://binxio-public-$$REGION/lambdas/$(NAME)-latest.zip; \
-		aws s3api --region $$REGION \
-			put-object-acl --bucket binxio-public-$$REGION \
-			--acl public-read --key lambdas/$(NAME)-$(VERSION).zip; \
-		aws s3api --region $$REGION \
-			put-object-acl --bucket binxio-public-$$REGION \
-			--acl public-read --key lambdas/$(NAME)-latest.zip; \
-	done
 
 do-push: deploy
 

@@ -44,11 +44,31 @@ This is to allow to deploy to databases with pre-populated users.
 
 ## Installation
 
-To install this Custom Resource, type:
+The installation of the Oracle User provider is not as straight forward as the other ones, due to licensing restrictions.
+To install this Custom Resource, you need to download the Oracle  Instant client libraries for Linux and
+for MacOS. 
+
+### Download instance client for Linux
+
+Download the Oracle Instant Client library lite for Linux (instantclient-basiclite-linux.x64-12.2.0.1.0.zip) to the
+subdirectory `zips`.
+
+For testing, purposes install the Instant Client Library locally.
+
+### Create a private s3 bucket
+
+To store your lambda, create a bucket.
 
 
-# NOT COMPLETE! #
+### Build and deploy the lambda
+To build the lambda, type:
 
+```
+make AWS_REGION=<your-bucket-region> S3_BUCKET=<your-bucket> release
+```
+
+
+### deploy the customer provider
 ```sh
 export VPC_ID=$(aws ec2  --output text --query 'Vpcs[?IsDefault].VpcId' describe-vpcs)
 export SUBNET_ID=$(aws ec2 --output text --query Subnets[0].SubnetId \
@@ -61,16 +81,16 @@ aws cloudformation create-stack \
 	--stack-name cfn-oracle-user-provider \
 	--template-body file://cloudformation/cfn-custom-resource-provider.json  \
 	--parameters \
-	            ParameterKey=VPC,ParameterValue=$VPC_ID \
-	            ParameterKey=Subnet,ParameterValue=$SUBNET_ID \
-                ParameterKey=SecurityGroup,ParameterValue=$SG_ID
+	    ParameterKey=VPC,ParameterValue=$VPC_ID \
+	    ParameterKey=Subnet,ParameterValue=$SUBNET_ID \
+	    ParameterKey=SecurityGroup,ParameterValue=$SG_ID
+	    ParameterKey=LambdaS3Bucket,ParameterValue=<your-bucket>
 
 aws cloudformation wait stack-create-complete  --stack-name cfn-oracle-user-provider 
 ```
 Note that this uses the default VPC, subnet and security group. As the Lambda functions needs to connect to the database. You will need to 
 install this custom resource provider for each vpc that you want to be able to create database users.
 
-This CloudFormation template will use our pre-packaged provider from `s3://binxio-public/lambdas/cfn-oracle-user-provider-0.1.1.zip`.
 
 If you have not done so, please install the secret provider too.
 
@@ -95,7 +115,7 @@ aws cloudformation create-stack --stack-name cfn-database-user-provider-demo \
 	--template-body file://cloudformation/demo-stack.json
 aws cloudformation wait stack-create-complete  --stack-name cfn-database-user-provider-demo
 ```
-It will create a postgres database too, so it is quite time consuming...
+It will create an Oracle database too, so it is quite time consuming...
 
 ## Conclusion
 With this solution Oracle users can be provisioned just like a database, while keeping the
