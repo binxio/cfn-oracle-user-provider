@@ -7,7 +7,8 @@ ORACLE_INSTANCE_CLIENT_ZIP=zips/instantclient-basiclite-linux.x64-12.2.0.1.0.zip
 
 AWS_REGION=eu-central-1
 ALL_REGIONS=$(shell printf "import boto3\nprint '\\\n'.join(map(lambda r: r['RegionName'], boto3.client('ec2').describe_regions()['Regions']))\n" | python | grep -v '^$(AWS_REGION)$$')
-S3_BUCKET=binxio-public-$(AWS_REGION)
+S3_BUCKET_PREFIX=binxio-public
+S3_BUCKET=$(S3_BUCKET_PREFIX)-$(AWS_REGION)
 
 help:
 	@echo 'make                 - builds a zip file to target/.'
