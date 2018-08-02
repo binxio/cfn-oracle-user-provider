@@ -7,8 +7,10 @@ from oracle_user_provider import handler
 
 logging.basicConfig(level=logging.INFO)
 
+
 def escaped_string(str):
     return '"{}"'.format(str.replace('\\', '\\\\').replace('"', '\\"'))
+
 
 class Request(dict):
 
@@ -42,7 +44,7 @@ class Request(dict):
         if password is None:
             password = p['Password']
         return cx_Oracle.connect('{}/{}@{}:{}/{}'.format(
-                                     escaped_string(p['User']), escaped_string(password), db['Host'], db['Port'], db['DBName']))
+            escaped_string(p['User']), escaped_string(password), db['Host'], db['Port'], db['DBName']))
 
 
 def test_invalid_user_name():
@@ -56,8 +58,10 @@ def expected_physical_id(request):
     db = p['Database']
     return 'oracle:{}@{}:{}/{}'.format(p['User'], db['Host'], db['Port'], db['DBName'])
 
+
 def new_user_name():
     return 'u%s' % str(uuid.uuid4()).replace('-', '')[:29]
+
 
 def test_create_user():
     # create a test user
@@ -87,7 +91,6 @@ def test_create_user():
     c = request.test_user_connection()
     c.close()
 
-
     # revoke connect privileged the created user
     request = Request('Delete', name, physical_resource_id)
     response = handler(request, {})
@@ -111,6 +114,7 @@ def test_create_user():
     request['PhysicalResourceId'] = expected_physical_id(request)
     response = handler(request, {})
     assert response['Status'] == 'SUCCESS', response['Reason']
+
 
 def test_update_password():
     # create user
@@ -145,6 +149,7 @@ def test_update_password():
     request['PhysicalResourceId'] = physical_resource_id
     response = handler(request, {})
     assert response['Status'] == 'SUCCESS', response['Reason']
+
 
 def test_password_parameter_use():
     ssm = boto3.client('ssm')

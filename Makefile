@@ -19,7 +19,7 @@ help:
 	@echo 'make demo            - deploys the provider and the demo cloudformation stack.'
 	@echo 'make delete-demo     - deletes the demo cloudformation stack.'
 
-deploy:
+deploy: target/$(NAME)-$(VERSION).zip
 	aws s3 --region $(AWS_REGION) \
 		cp target/$(NAME)-$(VERSION).zip \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-$(VERSION).zip 
@@ -28,23 +28,23 @@ deploy:
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-$(VERSION).zip \
 		s3://$(S3_BUCKET)/lambdas/$(NAME)-latest.zip 
 
+$(ORACLE_INSTANCE_CLIENT_ZIP):
+	mkdir -p zips
+	aws s3 sync \
+	   s3://alm.coin.nl-maven-repo-bucket-eu-central-1/release/oracle/instantclient-basiclite-linux.x64/12.2.0.1.0/ \
+	   zips
+
 do-push: deploy
 
-do-build: local-build
+do-build: target/$(NAME)-$(VERSION).zip
 
-local-build: src/*.py venv requirements.txt $(ORACLE_INSTANCE_CLIENT_ZIP)
-	mkdir -p target/content 
-	cp requirements.txt target/content
-	docker run -v $(PWD)/target/content:/venv --workdir /venv python:2.7 pip install --quiet -t . -r requirements.txt
-	docker run -v $(PWD)/target/content:/venv --workdir /venv python:2.7 python -m compileall -q -f .
-	for zip in zips/*.zip ; do bsdtar --strip-components=1 -C target/content -xvf $$zip; done ; rm target/content/ojdbc8.jar target/content/xstreams.jar
-	docker run -v $(PWD)/target/content:/venv python:2.7 /bin/bash -c 'apt-get update; apt-get install -y libaio-dev ; cp /lib/x86_64-linux-gnu/libaio.so.1.0.1 /venv'
-	(cd target/content ; ln -sf libaio.so.1.0.1 libaio.so.1)
-	cp -r src/* target/content
-	find target/content -type d | xargs  chmod ugo+rx
-	find target/content -type f | xargs  chmod ugo+r 
-	cd target/content && zip --quiet -9r ../../target/$(NAME)-$(VERSION).zip  *
-	chmod ugo+r target/$(NAME)-$(VERSION).zip
+target/$(NAME)-$(VERSION).zip: src/*.py requirements.txt $(ORACLE_INSTANCE_CLIENT_ZIP)
+	mkdir -p target
+	docker build --build-arg ZIPFILE=$(NAME)-$(VERSION).zip -t $(NAME)-lambda:$(VERSION) -f Dockerfile.lambda . && \
+		ID=$$(docker create $(NAME)-lambda:$(VERSION) /bin/true) && \
+		docker export $$ID | (cd target && tar -xvf - $(NAME)-$(VERSION).zip) && \
+		docker rm -f $$ID && \
+		chmod ugo+r target/$(NAME)-$(VERSION).zip
 
 venv: requirements.txt
 	virtualenv -p python2 venv  && \
