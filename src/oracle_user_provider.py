@@ -99,7 +99,7 @@ class OracleUser(ResourceProvider):
             response = self.ssm.get_parameter(Name=name, WithDecryption=True)
             return response['Parameter']['Value']
         except ClientError as e:
-            raise ValueError('Could not obtain password using name {}, {}'.format(name, e.message))
+            raise ValueError('Could not obtain password using name {}, {}'.format(name, e))
 
     @property
     def user_password(self):
@@ -210,7 +210,7 @@ class OracleUser(ResourceProvider):
             self.physical_resource_id = self.url
         except Exception as e:
             self.physical_resource_id = 'could-not-create'
-            self.fail('Failed to create user, %s' % e.message)
+            self.fail('Failed to create user, %s' % e)
         finally:
             self.close()
 

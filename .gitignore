@@ -1,3 +1,4 @@
+zips/
 .pytest_cache/
 dist/*
 .idea/workspace.xml
