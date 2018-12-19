@@ -34,6 +34,11 @@ request_schema = {
             "default": False,
             "description": "if true, will adopt an existing user on create"
         },
+        "ResourceRole": {
+            "type": "boolean",
+            "default": False,
+            "description": "if true, grant resource role to the user"
+        },
         "DeletionPolicy": {
             "type": "string",
             "default": "Retain",
@@ -195,6 +200,8 @@ class OracleUser(ResourceProvider):
         try:
             cursor.execute("CREATE USER {} IDENTIFIED BY {}".format(escaped_string(self.user), escaped_string(self.user_password)))
             cursor.execute("GRANT CONNECT TO {}".format(escaped_string(self.user)))
+            if self.get('ResourceRole'):
+                cursor.execute("GRANT RESOURCE TO {}".format(escaped_string(self.user)))
         finally:
             cursor.close()
 
