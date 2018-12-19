@@ -1,5 +1,3 @@
-zips/
-.pytest_cache/
 dist/*
 .idea/workspace.xml
 .idea/tasks.xml

@@ -83,6 +83,7 @@ request_schema = {
     }
 }
 
+
 def escaped_string(str):
     return '"{}"'.format(str.replace('\\', '\\\\').replace('"', '\\"'))
 
@@ -103,7 +104,7 @@ class OracleUser(ResourceProvider):
             response = self.ssm.get_parameter(Name=name, WithDecryption=True)
             return response['Parameter']['Value']
         except ClientError as e:
-            raise ValueError('Could not obtain password using name {}, {}'.format(name, e.message))
+            raise ValueError('Could not obtain password using name {}, {}'.format(name, e))
 
     @property
     def user_password(self):
@@ -111,7 +112,6 @@ class OracleUser(ResourceProvider):
             return self.get('Password')
         else:
             return self.get_password(self.get('PasswordParameterName'))
-
 
     @property
     def dbowner_password(self):
@@ -149,7 +149,6 @@ class OracleUser(ResourceProvider):
     def deletion_policy(self):
         return self.get('DeletionPolicy')
 
-
     def connect(self):
         self.connection = None
         log.info('connecting to database %s on port %d as user %s', self.host, self.port, self.dbowner)
@@ -163,7 +162,6 @@ class OracleUser(ResourceProvider):
         if self.connection is not None:
             self.connection.close()
         self.connection = None
-
 
     def user_exists(self):
         cursor = self.connection.cursor()
@@ -190,7 +188,8 @@ class OracleUser(ResourceProvider):
         log.info('update password of %s', self.user)
         cursor = self.connection.cursor()
         try:
-            cursor.execute("ALTER USER {} IDENTIFIED BY {} ACCOUNT UNLOCK".format(escaped_string(self.user), escaped_string(self.user_password)))
+            cursor.execute("ALTER USER {} IDENTIFIED BY {} ACCOUNT UNLOCK".format(
+                escaped_string(self.user), escaped_string(self.user_password)))
         finally:
             cursor.close()
 
@@ -218,7 +217,7 @@ class OracleUser(ResourceProvider):
             self.physical_resource_id = self.url
         except Exception as e:
             self.physical_resource_id = 'could-not-create'
-            self.fail('Failed to create user, %s' % e.message)
+            self.fail('Failed to create user, %s' % e)
         finally:
             self.close()
 
@@ -228,7 +227,7 @@ class OracleUser(ResourceProvider):
 
     @property
     def update_allowed(self):
-        return self.url == self.physical_resource_id
+        return self.get('User') == self.get_old('User', self.get('User'))
 
     def update(self):
         try:
