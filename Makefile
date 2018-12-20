@@ -43,7 +43,7 @@ target/$(NAME)-$(VERSION).zip: src/*.py requirements.txt $(ORACLE_INSTANCE_CLIEN
 	mkdir -p target
 	docker build --build-arg ZIPFILE=$(NAME)-$(VERSION).zip -t $(NAME)-lambda:$(VERSION) -f Dockerfile.lambda . && \
 		ID=$$(docker create $(NAME)-lambda:$(VERSION) /bin/true) && \
-		docker export $$ID | (cd target && tar -xvf - $(NAME)-$(VERSION).zip) && \
+		docker cp $$ID:/$(NAME)-$(VERSION).zip target && \
 		docker rm -f $$ID && \
 		chmod ugo+r target/$(NAME)-$(VERSION).zip
 
