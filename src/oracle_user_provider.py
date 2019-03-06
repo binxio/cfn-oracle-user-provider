@@ -34,6 +34,11 @@ request_schema = {
             "default": False,
             "description": "if true, will adopt an existing user on create"
         },
+        "ResourceRole": {
+            "type": "boolean",
+            "default": False,
+            "description": "if true, grant resource role to the user"
+        },
         "DeletionPolicy": {
             "type": "string",
             "default": "Retain",
@@ -179,6 +184,28 @@ class OracleUser(ResourceProvider):
         finally:
             cursor.close()
 
+    def grant_role(self, role):
+        log.info('grant %s to %s', role, self.user)
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("GRANT {} TO {}".format(role, escaped_string(self.user)))
+        finally:
+            cursor.close()
+
+    def revoke_role(self, role):
+        log.info('revoke %s from %s', role, self.user)
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("REVOKE {} TO {}".format(role, escaped_string(self.user)))
+        except cx_Oracle.DatabaseError as e:
+            if hasattr(e.args[0], 'code') and e.args[0].code == 990:
+                pass # permission not granted
+            else:
+                log.error('revoke failed, %d %s', e.args[0].code, e)
+                raise
+        finally:
+            cursor.close()
+
     def update_password(self):
         log.info('update password of %s', self.user)
         cursor = self.connection.cursor()
@@ -193,23 +220,32 @@ class OracleUser(ResourceProvider):
         cursor = self.connection.cursor()
         try:
             cursor.execute("CREATE USER {} IDENTIFIED BY {}".format(escaped_string(self.user), escaped_string(self.user_password)))
-            cursor.execute("GRANT CONNECT TO {}".format(escaped_string(self.user)))
         finally:
             cursor.close()
+
+    def grant_roles(self):
+        self.grant_role('CONNECT')
+        if self.get('ResourceRole'):
+            self.grant_role('RESOURCE')
+        else:
+            self.revoke_role('RESOURCE')
 
     def create(self):
         try:
             self.connect()
             if not self.user_exists():
                 self.create_user()
+                self.physical_resource_id = self.url
             else:
                 if self.adopt_user:
                     self.update_password()
+                    self.physical_resource_id = self.url
                 else:
                     self.fail('user already exists and Adopt == False')
-            self.physical_resource_id = self.url
+            self.grant_roles()
         except Exception as e:
-            self.physical_resource_id = 'could-not-create'
+            if not self.physical_resource_id:
+                self.physical_resource_id = 'could-not-create'
             self.fail('Failed to create user, %s' % e)
         finally:
             self.close()
@@ -228,7 +264,8 @@ class OracleUser(ResourceProvider):
             if self.update_allowed:
                 self.update_password()
             else:
-                self.fail('Only the password of %s can be updated' % self.user)
+                self.fail('the user cannot be renamed.' % self.user)
+            self.grant_roles()
         except Exception as e:
             self.fail('Failed to update the user, {}'.format(e))
         finally:

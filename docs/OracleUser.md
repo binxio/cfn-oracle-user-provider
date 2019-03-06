@@ -10,6 +10,7 @@ Type: Custom::OracleUser
 Properties:
   Name: String
   Adopt: Boolean
+  ResourceRole: Boolean
   Password: String
   PasswordParameterName: String
   DeletionPolicy: Retain/Drop
@@ -31,6 +32,7 @@ You can specify the following properties:
 
 - `Name` - of the user to create
 - `Adopt` - an existing user, default False.
+- `ResourceRole` - grant resource role to the user, default False.
 - `Password` - of the user 
 - `PasswordParameterName` - name of the parameter in the store containing the password of the user.
 - `DeletionPolicy` - when the resource is deleted, default is `Retain`.

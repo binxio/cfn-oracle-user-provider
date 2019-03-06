@@ -56,8 +56,8 @@ Resources:
     Properties:
       Description: CloudFormation Custom:OracleUser implementation
       Code:
-        S3Bucket: - !Ref 'LambdaS3Bucket'
-        S3Key: lambdas/cfn-oracle-user-provider-0.1.4.zip
+        S3Bucket: !Ref 'LambdaS3Bucket'
+        S3Key: lambdas/cfn-oracle-user-provider-0.1.6.zip
       VpcConfig:
         SecurityGroupIds:
           - !Ref 'SecurityGroup'
@@ -66,4 +66,4 @@ Resources:
       Handler: oracle_user_provider.handler
       MemorySize: 128
       Role: !GetAtt 'LambdaRole.Arn'
-      Runtime: python2.7
+      Runtime: python3.6

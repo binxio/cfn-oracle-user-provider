@@ -151,6 +151,42 @@ def test_update_password():
     assert response['Status'] == 'SUCCESS', response['Reason']
 
 
+def test_create_user_resource_role():
+    # create a test user
+    name = new_user_name()
+    request = Request('Create', name)
+    request['ResourceProperties']['ResourceRole'] = True
+    response = handler(request, {})
+    assert response['Status'] == 'SUCCESS', response['Reason']
+    assert 'PhysicalResourceId' in response
+    physical_resource_id = response['PhysicalResourceId']
+    assert physical_resource_id == expected_physical_id(request)
+
+    c = request.test_user_connection()
+    cursor = c.cursor()
+    cursor.execute('CREATE TABLE X(X VARCHAR2(10))')
+    cursor.execute('DROP TABLE X')
+    cursor.close()
+    c.close()
+
+    # revoke resource role
+    request = Request('Update', name, physical_resource_id)
+    response = handler(request, {})
+    assert response['Status'] == 'SUCCESS', response['Reason']
+
+    c = request.test_user_connection()
+    cursor = c.cursor()
+    try:
+        cursor.execute('CREATE TABLE X(X VARCHAR2(10))')
+        cursor.execute('DROP TABLE X')
+        assert False, 'CREATE/DROP statements should be disallowed'
+    except Exception as e:
+        pass # failed to create
+    finally:
+        cursor.close()
+        c.close()
+
+
 def test_password_parameter_use():
     ssm = boto3.client('ssm')
     name = new_user_name()
