@@ -264,7 +264,7 @@ class OracleUser(ResourceProvider):
             if self.update_allowed:
                 self.update_password()
             else:
-                self.fail('the user cannot be renamed.' % self.user)
+                self.fail('the user "{}" cannot be renamed.'.format(self.user))
             self.grant_roles()
         except Exception as e:
             self.fail('Failed to update the user, {}'.format(e))
