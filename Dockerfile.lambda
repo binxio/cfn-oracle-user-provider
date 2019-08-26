@@ -6,7 +6,7 @@ WORKDIR /lambda
 ADD requirements.txt /tmp
 RUN pip install --quiet -t /lambda -r /tmp/requirements.txt && \
     find /lambda -type d | xargs chmod ugo+rx && \
-    find /lambda -type f | xargs chmod ugo+r
+    find /lambda -type f -print0 | xargs -0 chmod ugo+r
 
 # Install Oracle client libraries in /lambda
 ADD zips/instantclient-basiclite-linux.x64*.zip /tmp
@@ -20,7 +20,7 @@ RUN cp /lib/x86_64-linux-gnu/libaio.so.1.0.1 /lambda && \
 
 ADD src/ /lambda/
 RUN find /lambda -type d | xargs chmod ugo+rx && \
-    find /lambda -type f | xargs chmod ugo+r
+    find /lambda -type f -print0 | xargs -0 chmod ugo+r
 
 RUN python -m compileall -q /lambda
 ARG ZIPFILE=lambda.zip
