@@ -14,7 +14,7 @@ RUN bsdtar -C /lambda --strip-components=1  -xf /tmp/instantclient-basiclite-lin
     rm /lambda/*.jar
 
 # Add libaio
-RUN cp /usr/lib/x86_64-linux-gnu/libaio.so.1.0.1 /lambda && \
+RUN cp /lib/x86_64-linux-gnu/libaio.so.1.0.1 /lambda && \
 	ln -sf /lambda/libaio.so.1.0.1 /lambda/libaio.so.1
 
 
