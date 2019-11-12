@@ -6,5 +6,5 @@ Before you can test this code install the [Oracle instant client libraries](http
 ```
 docker run -d \
       -p 1521:1521 \
-      wnameless/oracle-xe-11g
+      your/oracle-xe-11g
 ```
