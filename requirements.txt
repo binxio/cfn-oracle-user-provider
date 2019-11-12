@@ -1,3 +1,2 @@
-boto3
 cx_oracle
 cfn_resource_provider>==0.10.0
