@@ -1,3 +1,4 @@
+import os
 import boto3
 import logging
 import cx_Oracle
@@ -284,6 +285,17 @@ class OracleUser(ResourceProvider):
         finally:
             self.close()
 
+
+def set_host_aliases():
+    """
+    to avoid an ORA-24454 client host name not set inside the AWS lambda runtime
+    """
+    with open('/tmp/hosts', 'w') as f:
+        uname = os.uname()
+        f.write(f'{uname.nodename} localhost\n')
+    os.environ['HOSTALIASES'] = '/tmp/hosts'
+
+set_host_aliases()
 
 provider = OracleUser()
 

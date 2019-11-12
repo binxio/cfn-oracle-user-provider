@@ -6,7 +6,7 @@ ORACLE_INSTANT_CLIENT_HOME=/usr/local/lib/instantclient_12_2/
 ORACLE_INSTANCE_CLIENT_ZIP=zips/instantclient-basiclite-linux.x64-12.2.0.1.0.zip
 
 AWS_REGION=eu-central-1
-ALL_REGIONS=$(shell printf "import boto3\nprint '\\\n'.join(map(lambda r: r['RegionName'], boto3.client('ec2').describe_regions()['Regions']))\n" | python | grep -v '^$(AWS_REGION)$$')
+ALL_REGIONS=$(shell printf "import boto3\nprint '\\\n'.join(map(lambda r: r['RegionName'], boto3.client('ec2').describe_regions()['Regions']))\n" | python3 | grep -v '^$(AWS_REGION)$$')
 S3_BUCKET_PREFIX=binxio-public
 S3_BUCKET=$(S3_BUCKET_PREFIX)-$(AWS_REGION)
 
@@ -48,7 +48,7 @@ target/$(NAME)-$(VERSION).zip: src/*.py requirements.txt $(ORACLE_INSTANCE_CLIEN
 		chmod ugo+r target/$(NAME)-$(VERSION).zip
 
 venv: requirements.txt
-	virtualenv -p python2 venv  && \
+	virtualenv -p python3 venv  && \
 	. ./venv/bin/activate && \
 	pip install --quiet --upgrade pip && \
 	pip install --quiet -r requirements.txt 
