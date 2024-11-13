@@ -1,0 +1,159 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Name:
+    Type: String
+    Description: last part of the name of the ECR repository
+
+  AWSAccountIdsWithReadAccess:
+    Type: List<String>
+    Description: list of account numbers with access to the ECR repository
+    AllowedPattern: '(^$|[0-9]+)'
+    Default: ''
+
+  AWSAccountIdsLambdaWithReadAccess:
+    Type: List<String>
+    Description: list of Function ARNs of functions with access to the ECR repository
+    AllowedPattern: "(^$|arn:aws:lambda:[^:]*:[0-9]+:function:.*)"
+    Default: ''
+
+
+Conditions:
+    WithAWSAccountIdsWithReadAccess: !Not
+      - !Equals
+        - ""
+        - !Join [ "", !Ref AWSAccountIdsWithReadAccess ]
+
+    WithAWSAccountIdsLambdaWithReadAccess: !Not
+      - !Equals
+        - ""
+        - !Join [ "", !Ref AWSAccountIdsLambdaWithReadAccess ]
+
+Resources:
+  Project:
+    Type: AWS::CodeBuild::Project
+    DependsOn:
+      - LogGroup
+    Properties:
+      Name: !Ref Name
+      Description: !Sub '${Name} builder'
+      ServiceRole: !Ref 'ProjectRole'
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+      Source:
+        Type: GITHUB
+        Location: !Sub 'https://github.com/binxio/${Name}.git'
+        BuildSpec: .buildspec.yaml
+        GitCloneDepth: 0
+        Auth:
+          Type: OAUTH
+      Triggers:
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: "refs/tags/.*"
+        Webhook: true
+
+  ProjectRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: codebuild.amazonaws.com
+            Condition: {}
+      Path: /
+      Policies:
+        - PolicyName: LambdaBuilder
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeRegions
+                  - ecr:GetAuthorizationToken
+                Resource:
+                  - '*'
+
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                Resource:
+                  - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/xebia/${Name}'
+
+              - Sid: CloudWatchLogsPolicy
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - '*'
+
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub xebia/${Name}
+      ImageTagMutability: IMMUTABLE
+      RepositoryPolicyText:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: write to owner account
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
+              - ecr:PutImage
+              - ecr:InitiateLayerUpload
+              - ecr:UploadLayerPart
+              - ecr:CompleteLayerUpload
+
+          - !If
+            - WithAWSAccountIdsWithReadAccess
+            - Sid: read only access
+              Effect: Allow
+              Principal:
+                AWS: !Ref AWSAccountIdsWithReadAccess
+              Action:
+                - ecr:GetDownloadUrlForLayer
+                - ecr:BatchGetImage
+                - ecr:BatchCheckLayerAvailability
+            - !Ref AWS::NoValue
+
+          - !If
+            - WithAWSAccountIdsLambdaWithReadAccess
+            - Sid: read only access for lambda
+              Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action:
+                - ecr:GetDownloadUrlForLayer
+                - ecr:BatchGetImage
+                - ecr:BatchCheckLayerAvailability
+              Condition:
+                "ForAnyValue:StringLike":
+                  "aws:sourceARN": !Ref AWSAccountIdsLambdaWithReadAccess
+            - !Ref AWS::NoValue
+
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/codebuild/${Name}'
+      RetentionInDays: 7

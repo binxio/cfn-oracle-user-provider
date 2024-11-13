@@ -1,3 +1,4 @@
+---
 AWSTemplateFormatVersion: '2010-09-09'
 Description: CloudFormation Custom Oracle User Provider
 Parameters:
@@ -7,13 +8,18 @@ Parameters:
     Type: List<AWS::EC2::Subnet::Id>
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup::Id
-  LambdaS3Bucket:
+  ProviderImageUri:
     Type: String
+    Description: Docker image URI to use
+    Default: ''
+
+Conditions:
+  UseCustomProviderImageUri: !Not
+    - !Equals ["", !Ref ProviderImageUri]
+
 Resources:
   LambdaPolicy:
     Type: AWS::IAM::Policy
-    DependsOn:
-      - LambdaRole
     Properties:
       PolicyName: CFNCustomDBUserProviderPolicy
       PolicyDocument:
@@ -35,6 +41,7 @@ Resources:
             Effect: Allow
       Roles:
         - !Ref 'LambdaRole'
+
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -49,21 +56,23 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+
   CFNDBUserProvider:
     Type: AWS::Lambda::Function
     DependsOn:
-      - LambdaRole
+      - LambdaPolicy
     Properties:
       Description: CloudFormation Custom:OracleUser implementation
+      PackageType: Image
       Code:
-        S3Bucket: !Ref 'LambdaS3Bucket'
-        S3Key: lambdas/cfn-oracle-user-provider-0.1.10.zip
+        ImageUri: !If
+          - UseCustomProviderImageUri
+          - !Ref ProviderImageUri
+          - 463637877380.dkr.ecr.eu-central-1.amazonaws.com/xebia/cfn-oracle-user-provider:0.1.10-5a63097-dirty
       VpcConfig:
         SecurityGroupIds:
           - !Ref 'SecurityGroup'
         SubnetIds: !Ref 'Subnets'
       FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:binxio-cfn-oracle-user-provider-${VPC}'
-      Handler: oracle_user_provider.handler
       MemorySize: 128
       Role: !GetAtt 'LambdaRole.Arn'
-      Runtime: python3.6

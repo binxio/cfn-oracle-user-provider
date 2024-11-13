@@ -7,7 +7,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 
 ```yaml
 Type: Custom::OracleUser
-Properties:
+Properties: 
   Name: String
   Adopt: Boolean
   ResourceRole: Boolean

@@ -17,8 +17,8 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       LicenseModel: license-included
-      Engine: oracle-se1
-      EngineVersion: 11.2.0.4.v13
+      Engine: oracle-se2
+      EngineVersion: 19.0.0.0.ru-2024-10.rur-2024-10.r1
       CharacterSetName: WE8ISO8859P1
       VPCSecurityGroups:
         - !Ref 'DatabaseSecurityGroup'
@@ -31,13 +31,13 @@ Resources:
       DBSubnetGroupName: !Ref 'DBSubnetGroup'
       DBParameterGroupName: !Ref 'DatabaseParameterGroup'
       AllocatedStorage: 10
-      DBInstanceClass: db.t2.small
+      DBInstanceClass: db.t3.medium
     DeletionPolicy: Snapshot
   DatabaseParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
       Description: Parameters for Oracle CRDB1
-      Family: oracle-se1-11.2
+      Family: oracle-se2-19
       Parameters: {}
 
   DatabaseSecurityGroup:

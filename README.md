@@ -1,6 +1,7 @@
 # cfn-oracle-user-provider
 
-Although CloudFormation is very good in creating Oracle database servers with Amazon RDS, the mundane task of creating Oracle users is not supported. 
+Although CloudFormation is very good in creating Oracle database servers with Amazon RDS,
+the mundane task of creating Oracle users is not supported. 
 
 This custom Oracle user provider automates the provisioning of Oracle users.
 
@@ -45,26 +46,21 @@ This is to allow to deploy to databases with pre-populated users.
 ## Installation
 
 The installation of the Oracle User provider is not as straight forward as the other ones, due to licensing restrictions.
-To install this Custom Resource, you need to download the Oracle  Instant client libraries for Linux and
-for MacOS. 
+To install this Custom Resource, you need to build and deploy it yourself.
 
-### Download instance client for Linux
+`
+### Create a private ECR repository
 
-Download the Oracle Instant Client library lite for Linux (instantclient-basiclite-linux.x64-12.2.0.1.0.zip) to the
-subdirectory `zips`.
-
-For testing, purposes install the Instant Client Library locally.
-
-### Create a private s3 bucket
-
-To store your lambda, create a bucket.
+To store your lambda container image, create an ECR repository with the name `xebia/cfn-oracle-user-provider`
 
 
-### Build and deploy the lambda
+### Build and deploy the lambda docker image:
 To build the lambda, type:
 
 ```
-make AWS_REGION=<your-bucket-region> S3_BUCKET=<your-bucket> release
+make snapshot
+
+PROVIDER_IMAGE_URI=$(make snowimage)
 ```
 
 
@@ -79,12 +75,12 @@ export SG_ID=$(aws ec2 --output text --query "SecurityGroups[*].GroupId" \
 aws cloudformation create-stack \
 	--capabilities CAPABILITY_IAM \
 	--stack-name cfn-oracle-user-provider \
-	--template-body file://cloudformation/cfn-custom-resource-provider.json  \
+	--template-body file://cloudformation/cfn-custom-resource-provider.yaml  \
 	--parameters \
 	    ParameterKey=VPC,ParameterValue=$VPC_ID \
 	    ParameterKey=Subnet,ParameterValue=$SUBNET_ID \
-	    ParameterKey=SecurityGroup,ParameterValue=$SG_ID
-	    ParameterKey=LambdaS3Bucket,ParameterValue=<your-bucket>
+	    ParameterKey=SecurityGroup,ParameterValue=$SG_ID \
+	    ParameterKey=ProviderImageUri,ParameterValue=$PROVIDER_IMAGE_URI
 
 aws cloudformation wait stack-create-complete  --stack-name cfn-oracle-user-provider 
 ```
