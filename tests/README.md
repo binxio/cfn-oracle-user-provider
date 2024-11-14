@@ -6,5 +6,7 @@ Before you can test this code install the [Oracle instant client libraries](http
 ```
 docker run -d \
       -p 1521:1521 \
-      your/oracle-xe-11g
+      --name oracle-se2 \
+      -e ORACLE_PWD=p@ssw0rd \
+      container-registry.oracle.com/database/free:latest-lite
 ```

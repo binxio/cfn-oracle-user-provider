@@ -24,8 +24,8 @@ class Request(dict):
             'LogicalResourceId': 'Whatever',
             'ResourceProperties': {
                 'User': user, 'Password': 'password',
-                'Database': {'User': 'system', 'Password': 'oracle', 'Host': 'localhost',
-                              'Port': 1521, 'DBName': 'XE'}
+                'Database': {'User': 'system', 'Password': 'p@ssw0rd', 'Host': 'localhost',
+                              'Port': 1521, 'DBName': 'FREEPDB1'}
             }})
         if physical_resource_id is not None:
             self['PhysicalResourceId'] = physical_resource_id

@@ -5,11 +5,12 @@ verify_ssl = true
 
 [packages]
 cx_oracle = "*"
-cfn_resource_provider = ">==0.10.0"
+cfn_resource_provider = ">=0.10.0"
 
 [dev-packages]
 boto3 = "*"
 pytest = "*"
+git-release-tag = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"

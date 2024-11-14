@@ -68,7 +68,7 @@ Resources:
         ImageUri: !If
           - UseCustomProviderImageUri
           - !Ref ProviderImageUri
-          - 463637877380.dkr.ecr.eu-central-1.amazonaws.com/xebia/cfn-oracle-user-provider:1.0.0
+          - 463637877380.dkr.ecr.eu-central-1.amazonaws.com/xebia/cfn-oracle-user-provider:1.1.0
       VpcConfig:
         SecurityGroupIds:
           - !Ref 'SecurityGroup'
